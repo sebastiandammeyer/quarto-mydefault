@@ -1,0 +1,5 @@
+title: "My Default Template"
+author: "Sebastian Dammeyer"
+version: 1.0.0
+quarto-required: ">=1.0.0"
+type: template
