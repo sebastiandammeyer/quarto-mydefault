@@ -1,0 +1,788 @@
+---
+execute:
+  eval: false
+format:
+  revealjs:
+    theme: simple
+    menu: false
+    slide-number: false
+    controls: true
+    progress: false
+    center: true
+    width: 1280
+    height: 720
+    margin: 0.04
+    include-in-header:
+      text: |
+        <style>
+          .reveal {
+              font-family: "Baskerville", "Libre Baskerville", serif;
+            }
+          .reveal {
+              font-size: 24px; /* fx fra 26px */
+            }
+          .reveal {
+              background: #f6f3ee;
+            }
+          .reveal h1,
+          .reveal h2,
+          .reveal h3,
+          .reveal h4,
+          .reveal h5,
+          .reveal h6 {
+            font-family: "Baskerville", "Libre Baskerville", serif;
+            text-align: center;
+            font-weight: 700;
+          }
+          .reveal h2 { font-size: 1.4em; margin-bottom: 0.6em; }
+            .board-wrap{
+              width: 92vw;
+              margin: 0 auto;
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+            }
+            
+            /* SCOREBOARD NEDERST */
+            .scoreboard{
+              width: 2000000%;
+              display: flex;
+              justify-content: center;
+              gap: 2px;
+              margin-top: 6px;
+            }
+            
+            /* GØR HOLD-BOKSE SMÅ */
+            .team{
+              width: 100px;
+              padding: 6px 8px;
+              gap: 40px;
+              font-size: 0.8em;
+            }
+            
+            .team-title{
+              font-size: 0.9em;
+            }
+            
+            .team-score{
+              font-size: 1.3em;
+            }
+            
+            .team-buttons{
+              gap: 6px;
+            }
+            
+            .score-btn{
+              padding: 4px 8px;
+              font-size: 0.8em;
+            }
+            
+          .board-grid{
+            display:grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: auto repeat(5, 1fr);
+            gap: 12px;
+            width: 92vw;
+            height: 70vh;
+            margin: 0 auto;
+          }
+
+          .board-grid .header{
+            border: 3px solid rgba(92, 64, 51, 0.6);
+            border-radius: 80px;
+            background: #FFF;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            padding: 10px;
+            font-size: 0.95em;
+            font-weight: bold;
+          }
+
+          .board-grid .cell{
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 80px;
+            background: #e6eef7;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size: 1.4em;
+          }
+
+          .board-grid .cell a{
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            text-decoration:none;
+            color:#000;
+          }
+          
+          .board-grid .cell a {
+            font-weight: 400;              /* fjerner “fed” look */
+            letter-spacing: 0.02em;        /* valgfrit – gør det mere elegant */
+            font-variant-numeric: lining-nums; /* gør 100–500 visuelt ens */
+          }
+          
+          .board-grid .cell.used{
+          .background: none !important;
+          }
+          
+          .board-grid .cell.used a{
+            background: #bdbdbd !important;
+            color:#555 !important;
+          }
+          
+          /* Fjern fast baggrund på cellen */
+          .board-grid .cell {
+            background: none;
+          }
+          
+          /* Sørg for runde hjørner på selve feltet */
+          .board-grid .cell a {
+            border-radius: 80px;
+          }
+          
+          /* 100 */
+          .board-grid .cell[data-cell$="-100"] a {
+            background: linear-gradient(180deg, #e6eef7, #dbe6f5);
+          }
+          
+          /* 200 */
+          .board-grid .cell[data-cell$="-200"] a {
+            background: linear-gradient(180deg, #dbe6f5, #cbdaf0);
+          }
+          
+          /* 300 */
+          .board-grid .cell[data-cell$="-300"] a {
+            background: linear-gradient(180deg, #cbdaf0, #b7cdea);
+          }
+          /* Kun kategori 5: 300-ish (300, 303, 305 osv.) */
+          .board-grid .cell[data-cell^="k5-301"] a {
+            background: linear-gradient(180deg, #cbdaf0, #b7cdea);
+          }
+          .board-grid .cell[data-cell^="k5-302"] a {
+            background: linear-gradient(180deg, #cbdaf0, #b7cdea);
+          }
+          .board-grid .cell[data-cell^="k5-303"] a {
+            background: linear-gradient(180deg, #cbdaf0, #b7cdea);
+          }
+          
+          /* 400 */
+          .board-grid .cell[data-cell$="-400"] a {
+            background: linear-gradient(180deg, #b7cdea, #9fb8e0);
+          }
+          
+          /* 500 */
+          .board-grid .cell[data-cell$="-500"] a {
+            background: linear-gradient(180deg, #9fb8e0, #879fd4);
+            font-weight: bold;
+          }
+          .board-grid .cell a:hover{
+            filter: brightness(0.97);
+          }
+          /* === FJERN FED FRA TALFELTER === */
+          .board-grid .cell a {
+            font-weight: 400 !important;        /* normal vægt */
+            letter-spacing: 0.02em;             /* valgfrit – gør det mere elegant */
+            font-variant-numeric: lining-nums;  /* ensartede 100–500 */
+          }
+
+          .mark-used-btn {
+            font-family: "Baskerville", "Libre Baskerville", serif;
+            font-size: 1em;
+            padding: 12px 26px;
+            margin-top: 30px;
+            cursor: pointer;
+          
+            border-radius: 80px;                 /* 👈 samme runde look */
+            border: 2px solid rgba(92, 64, 51, 0.6);
+            background: #faf0e6;
+            color: #000;
+          
+            transition: all 0.15s ease;
+          }
+
+          .scoreboard{
+            width: 92vw;
+            margin: 10px auto 16px auto;
+            display:flex;
+            gap:50px;
+            justify-content:center;
+            align-items:stretch;
+          }
+          .team{
+            border: 3px solid rgba(92, 64, 51, 0.6);
+            border-radius: 80px;
+            padding:10px 55px;
+            min-width:320px;
+            background:#fff;
+            display:flex;
+            flex-direction:row;
+            gap:55px;
+          }
+          .team-title{ font-weight:bold; text-align:center; }
+          .team-score{ font-size:1.6em; text-align:center; }
+          .team-buttons{ display:flex; gap:8px; justify-content:center; }
+          .score-btn{ font-size:0.9em; padding:8px 10px; cursor:pointer; }
+          /* === SCOREBOARD – ENDGYLDIG STYLING === */
+
+        .score-btn {
+          font-family: "Baskerville", "Libre Baskerville", serif !important;
+          font-size: 0.9em;
+          padding: 6px 12px;
+          border: 1px solid rgba(80, 60, 40, 0.4);
+          background: #faf0e6;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+        
+        .score-btn:hover {
+          background: #f0e4d6;
+        }
+        
+        .team-buttons {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        </style>
+    include-after-body:
+      text: |
+        <script>
+          (function () {
+            const USED_KEY = "jeopardy_used_cells";
+            const SCORE_KEY = "jeopardy_scores";
+
+            function getUsed() {
+              try { return JSON.parse(localStorage.getItem(USED_KEY) || "[]"); }
+              catch(e) { return []; }
+            }
+
+            function setUsed(arr) {
+              localStorage.setItem(USED_KEY, JSON.stringify(Array.from(new Set(arr))));
+            }
+
+            function applyUsed() {
+              const used = new Set(getUsed());
+              document.querySelectorAll('[data-cell]').forEach(el => {
+                const id = el.getAttribute('data-cell');
+                if (used.has(id)) el.classList.add('used');
+              });
+            }
+
+            window.markUsedAndReturn = function(cellId) {
+              const used = getUsed();
+              used.push(cellId);
+              setUsed(used);
+              applyUsed();
+              if (window.Reveal) Reveal.slide(0);
+              else window.location.hash = "#/top";
+            };
+
+            function getScores() {
+              try { return JSON.parse(localStorage.getItem(SCORE_KEY) || '{"t1":0,"t2":0}'); }
+              catch(e) { return { t1: 0, t2: 0 }; }
+            }
+
+            function setScores(s) {
+              localStorage.setItem(SCORE_KEY, JSON.stringify(s));
+            }
+
+            function renderScores() {
+              const s = getScores();
+              const t1 = document.getElementById("score-t1");
+              const t2 = document.getElementById("score-t2");
+              if (t1) t1.textContent = s.t1;
+              if (t2) t2.textContent = s.t2;
+            }
+
+            window.addPoints = function(team, delta) {
+              const s = getScores();
+              if (team === 1) s.t1 += delta;
+              if (team === 2) s.t2 += delta;
+              setScores(s);
+              renderScores();
+            };
+
+            window.resetScores = function() {
+              setScores({ t1: 0, t2: 0 });
+              renderScores();
+            };
+
+            function initAll() {
+              applyUsed();
+              renderScores();
+            }
+
+            document.addEventListener("DOMContentLoaded", initAll);
+            if (window.Reveal) {
+              Reveal.on("ready", initAll);
+              Reveal.on("slidechanged", initAll);
+            }
+          })();
+        </script>
+---
+## Bodilbænkevarmer quizzen {#top}
+
+```{=html}
+<div class="board-wrap">
+
+  <div class="scoreboard">
+    <div class="team">
+      <div class="team-title">Sant Feuillin FC</div>
+      <div class="team-score" id="score-t1">0</div>
+      <div class="team-buttons">
+        <button class="score-btn" onclick="addPoints(1, -100)">-100</button>
+        <button class="score-btn" onclick="addPoints(1, 100)">+100</button>
+      </div>
+    </div>
+
+    <div class="team">
+      <div class="team-title">VaaV</div>
+      <div class="team-score" id="score-t2">0</div>
+      <div class="team-buttons">
+        <button class="score-btn" onclick="addPoints(2, -100)">-100</button>
+        <button class="score-btn" onclick="addPoints(2, 100)">+100</button>
+      </div>
+    </div>
+  </div>
+
+<div class="board-grid">
+  <div class="header"> Gæt en hund</div>
+  <div class="header">Stat(s)</div>
+  <div class="header">Pensum</div>
+  <div class="header">Show don't tell it</div>
+  <div class="header">Hvem er ham nede på den blååå der?</div>
+
+  <div class="cell" data-cell="k1-100"><a href="#/k1-100">100</a></div>
+  <div class="cell" data-cell="k2-100"><a href="#/k2-100">100</a></div>
+  <div class="cell" data-cell="k3-100"><a href="#/k3-100">100</a></div>
+  <div class="cell" data-cell="k4-100"><a href="#/k4-100">100</a></div>
+  <div class="cell" data-cell="k5-301"><a href="#/k5-301">301</a></div>
+
+  <div class="cell" data-cell="k1-200"><a href="#/k1-200">200</a></div>
+  <div class="cell" data-cell="k2-200"><a href="#/k2-200">200</a></div>
+  <div class="cell" data-cell="k3-200"><a href="#/k3-200">200</a></div>
+  <div class="cell" data-cell="k4-200"><a href="#/k4-200">200</a></div>
+  <div class="cell" data-cell="k5-302"><a href="#/k5-302">302</a></div>
+
+  <div class="cell" data-cell="k1-300"><a href="#/k1-300">300</a></div>
+  <div class="cell" data-cell="k2-300"><a href="#/k2-300">300</a></div>
+  <div class="cell" data-cell="k3-300"><a href="#/k3-300">300</a></div>
+  <div class="cell" data-cell="k4-300"><a href="#/k4-300">300</a></div>
+  <div class="cell" data-cell="k5-303"><a href="#/k5-303">303</a></div>
+
+  <div class="cell" data-cell="k1-400"><a href="#/k1-400">400</a></div>
+  <div class="cell" data-cell="k2-400"><a href="#/k2-400">400</a></div>
+  <div class="cell" data-cell="k3-400"><a href="#/k3-400">400</a></div>
+  <div class="cell" data-cell="k4-400"><a href="#/k4-400">400</a></div>
+  <div class="cell" data-cell="k5-400"><a href="#/k5-400">400</a></div>
+
+  <div class="cell" data-cell="k1-500"><a href="#/k1-500">500</a></div>
+  <div class="cell" data-cell="k2-500"><a href="#/k2-500">500</a></div>
+  <div class="cell" data-cell="k3-500"><a href="#/k3-500">500</a></div>
+  <div class="cell" data-cell="k4-500"><a href="#/k4-500">500</a></div>
+  <div class="cell" data-cell="k5-500"><a href="#/k5-500">500</a></div>
+  
+  
+</div>
+
+```
+---
+
+## Gæt en hund – 100 {#k1-100}
+Spørgsmål: 
+
+```{=html}
+<img src="data/hunde/hund1.png" style="max-width:60%; border-radius:12px; margin-top:20px;" />
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Cæcilie Lund Lassen
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k1-100')">
+  Marker som brugt og tilbage til boardet
+</button>
+```
+
+---
+
+## Gæt en hund – 2 {#k1-200}
+
+Spørgsmål: Hvem fra klassen er denne hund? 
+
+```{=html}
+<img src="data/hunde/hund2.png" style="max-width:30%; border-radius:12px; margin-top:20px;" />
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Astrid Kramer 
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k1-200')">
+  Marker som brugt og tilbage til boardet
+</button>
+```
+---
+
+## Gæt en hund – 300 {#k1-300}
+Spørgsmål: Hvem fra klassen er denne hund? 
+
+```{=html}
+<img src="data/hunde/hund3.png" style="max-width:20%; border-radius:12px; margin-top:20px;" />
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Tine Cecilie Mikkelsen
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k1-300')">
+  Marker som brugt og tilbage til boardet
+</button>
+``` 
+---
+
+## Gæt en hund – 400 {#k1-400}
+```{=html}
+<img src="data/hunde/hund4.png" style="max-width:30%; border-radius:12px; margin-top:20px;" />
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Jakob Almosetoft
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k1-400')">
+  Marker som brugt og tilbage til boardet
+</button>
+``` 
+---
+
+## Gæt en hund – 500 {#k1-500}
+```{=html}
+<img src="data/hunde/hund5.png" style="max-width:50%; border-radius:12px; margin-top:20px;" />
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Marie Schneiderman
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k1-500')">Marker som brugt og tilbage til boardet</button>
+``` 
+---
+
+## Stat(s) – 100 {#k2-100}
+Spørgsmål:Hvilket af disse tre STAldTips mod tømmermænd virker ikke? 
+
+A) Drik et stort glas vand før du går i seng
+B) Drikke elektrolytter
+C) Reparationsøl
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: 
+  C) Reparationsøl 
+(Kilde: mediqdanmark.dk)
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k2-100')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Stat(s) – 200 {#k2-200}
+Spørgsmål: Hvornår gik STAToil over til at hedde Cirkel K 
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: 2016
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k2-200')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Stat(s) – 300 {#k2-300}
+Spørgsmål:Hvad er STArTakkorden i "Hey Jude"
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: F dur 
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k2-300')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Stat(s) – 400 {#k2-400}
+Spørgsmål: Hvor stor er en typisk proSTATa? 
+
+A) 1,5x2x3 cm
+B) 2x2x3 cm
+C) 2x3x4 cm
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: 3) 2x3x4 
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k2-400')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Stat(s) – 500 {#k2-500}
+Spørgsmål: Hvilken amerikansk stat har flest/færrest våben per indbygger? 
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Montana(flest) New Jersey(færrest) 
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k2-500')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Pensum – 100 {#k3-100}
+Spørgsmål: Marlene ledte klassen mod historieeksamen i 3g med hård hånd. Så hård at hun sandsynligvis ville ønske hun måtte have lagt en hånd på os. I hvilket årti blev revselsesretten ophævet i danske folkeskoler? 
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: 1960erne (1966-67)
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k3-100')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Pensum – 200 {#k3-200}
+Spørgsmål: Kemi Thomas har lange øre og ved godt, hvad eleverne taler om når de snakker om analsex. Analsex kan ses på Pornhub. Nævn 3 ud af de 5 mest sete pornokategorier globalt i 2023 jf. pornhub.com/insights.
+
+<details>
+  <summary>Vis svar</summary>
+  Svar:
+  Lesbian, Japanese, Ebony, Anal, Milf
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k3-200')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Pensum – 300 {#k3-300}
+Spørgsmål: Lone Enevoldsen var glad for en god Dr. Peppers. Dr. Pepper er den anden mest solgte sodavand i USA, hvad er de andre 4 på top 5? (Faxe Kondi og Faxe Kondi light vil være to forskellige i denne rangering)
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Coca-Cola Classic, Dr. Pepper, Sprite, Pepsi-Cola, Diet Coke
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k3-300')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Pensum – 400 {#k3-400}
+Spørgsmål: Ikke mange andre gange i livet er man stødt på Jesper Nymands moodlequizzes. Men til gengæld er det ikke til at komme til for moooodellervoks. Hvad er hovedingrediensen i hjemmelavet modellervoks iht. voreseventyr.dk 
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Mel
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k3-400')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Kategori 3 – 500 {#k3-500}
+Spørgsmål: Kaares velkendte moove “grab it” er gået over i historie bøgerne. Andre har også gjort sig bemærkelsesværdige ved brug af denne metode. Hvornår sagde Donald Trump “grab them by the pussy” 
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Optagelsen er fra 2005, skandelen er fra 2016. Svaret er 2005 
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k3-500')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Kategori 4 – 100 {#k4-100}
+Spørgsmål: 
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: 
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k4-100')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Kategori 4 – 200 {#k4-200}
+Spørgsmål:
+
+<details>
+  <summary>Vis svar</summary>
+  Svar:
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k4-200')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Kategori 4 – 300 {#k4-300}
+Spørgsmål:
+
+<details>
+  <summary>Vis svar</summary>
+  Svar:
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k4-300')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Kategori 4 – 400 {#k4-400}
+Spørgsmål:
+
+<details>
+  <summary>Vis svar</summary>
+  Svar:
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k4-400')">Marker som brugt og tilbage til boardet</button>
+
+---
+
+## Kategori 4 – 500 {#k4-500}
+Spørgsmål:
+
+<details>
+  <summary>Vis svar</summary>
+  Svar:
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k4-500')">Marker som brugt og tilbage til boardet</button>
+
+## Hvem er ham nede på den blååå der? – 500 {#k5-301}
+```{=html}
+<div style="position: relative;">
+  <img src="data/blå_bog/bog1.png"
+       style="
+         position:absolute;
+         top:40px;
+         right:40px;
+
+         height:60vh;
+         width:auto;
+
+         max-height:none !important;
+         max-width:none !important;
+       " />
+</div>
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Asbjørn Hellemose
+</details>
+<button class="mark-used-btn" onclick="markUsedAndReturn('k5-301')">Marker som brugt og tilbage til boardet</button>
+``` 
+
+## Hvem er ham nede på den blååå der? – 302 {#k5-302}
+```{=html}
+<div style="position: relative;">
+  <img src="data/blå_bog/bog2.png"
+       style="
+         position:absolute;
+         top:40px;
+         right:40px;
+
+         height:80vh;
+         width:auto;
+
+         max-height:none !important;
+         max-width:none !important;
+       " />
+</div>
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Sulleyman (Sulleman)
+</details>
+<button class="mark-used-btn" onclick="markUsedAndReturn('k5-302')">Marker som brugt og tilbage til boardet</button>
+``` 
+---
+
+## Hvem er ham nede på den blååå der? – 303 {#k5-303}
+```{=html}
+<div style="position: relative;">
+  <img src="data/blå_bog/bog3.png"
+       style="
+         position:absolute;
+         top:40px;
+         right:40px;
+
+         height:100vh;
+         width:auto;
+
+         max-height:none !important;
+         max-width:none !important;
+       " />
+</div>
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Peter Bitsch
+</details>
+<button class="mark-used-btn" onclick="markUsedAndReturn('k5-303')">Marker som brugt og tilbage til boardet</button>
+``` 
+---
+
+## Hvem er ham nede på den blååå der? – 500 {#k5-400}
+```{=html}
+<div style="position: relative;">
+  <img src="data/blå_bog/bog4.png"
+       style="
+         position:absolute;
+         top:40px;
+         right:40px;
+
+         height:100vh;
+         width:auto;
+
+         max-height:none !important;
+         max-width:none !important;
+       " />
+</div>
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Sidsel Hester Smith (U-klassen)
+</details>
+<button class="mark-used-btn" onclick="markUsedAndReturn('k5-400')">Marker som brugt og tilbage til boardet</button>
+``` 
+---
+
+## Hvem er ham nede på den blååå der? – 500 {#k5-500}
+```{=html}
+<div style="position: relative;">
+  <img src="data/blå_bog/bog5.png"
+       style="
+         position:absolute;
+         top:40px;
+         right:40px;
+
+         height:120vh;
+         width:auto;
+
+         max-height:none !important;
+         max-width:none !important;
+       " />
+</div>
+
+<details>
+  <summary>Vis svar</summary>
+  Svar: Gustav Skjernov (Palæontolog)
+</details>
+
+<button class="mark-used-btn" onclick="markUsedAndReturn('k5-500')">Marker som brugt og tilbage til boardet</button>
+``` 
